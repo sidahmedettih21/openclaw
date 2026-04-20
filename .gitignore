@@ -1,24 +1,24 @@
-# Environment files with secrets
+# Secrets and credentials
 .env
-.env.local
-.env.*.local
+*.enc
+visa_data/*.enc
 
-# Encrypted client data (sensitive)
-visa_data/client.enc
+# Dependencies
+node_modules/
 
 # Logs and screenshots
 logs/
 screenshots/
-*.log
-
-# Node modules (can be regenerated with npm install)
-node_modules/
-
-# Temporary files
-*.tmp
-*.swp
-*~
 
 # System files
 .DS_Store
-Thumbs.db
+*.log
+*.tmp
+
+# Playwright browsers (too large)
+.cache/
+~/.cache/ms-playwright/
+
+# IDE
+.vscode/
+.idea/
