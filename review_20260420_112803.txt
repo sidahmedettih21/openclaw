@@ -1,0 +1,285 @@
+==========================================
+Visa Agent Full Review
+Date: Mon Apr 20 11:28:03 AM CET 2026
+Host: aquarium
+User: samsepi0l
+==========================================
+
+--- SYSTEM INFO ---
+Linux aquarium 6.17.0-20-generic #20~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Mar 19 01:28:37 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+Distributor ID:	Ubuntu
+Description:	Ubuntu 24.04.4 LTS
+Release:	24.04
+Codename:	noble
+
+--- NODE / NPM ---
+v22.22.2
+10.9.7
+
+--- PLAYWRIGHT ---
+Version 1.59.1
+
+--- OPENCLAW ---
+OpenClaw 2026.4.15 (041266a)
+
+--- .ENV (redacted) ---
+TELEGRAM_TOKEN=REDACTED
+TELEGRAM_ALLOWED_USER_ID=REDACTED
+PASSPHRASE=REDACTED
+TLS_BASE_URL=https://visas-pt.tlscontact.com
+CHROME_BIN=/usr/bin/google-chrome
+CHROME_USER_DATA=/home/samsepi0l/.config/google-chrome
+CHROME_PROFILE=tls-work
+HEADLESS=true
+CONTROL_PORT=7432
+TZ=Africa/Algiers
+MIN_DELAY_MINUTES=5
+MAX_DELAY_MINUTES=25
+
+--- OPENCLAW CONFIG (redacted) ---
+{
+  "agents": {
+    "defaults": {
+      "workspace": "/home/samsepi0l/.openclaw/workspace",
+      "model": {
+        "primary": "google/gemini-2.0-flash"
+      },
+      "models": {
+        "google/gemini-3.1-pro-preview": {},
+        "google/gemini-2.0-flash": {}
+      }
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "auth": {
+      "mode": "token",
+      "token": "REDACTED"
+    },
+    "port": 18789,
+    "bind": "loopback",
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    },
+    "controlUi": {
+      "allowInsecureAuth": true
+    },
+    "nodes": {
+      "denyCommands": [
+        "camera.snap",
+        "camera.clip",
+        "screen.record",
+        "contacts.add",
+        "calendar.add",
+        "reminders.add",
+        "sms.send",
+        "sms.search"
+      ]
+    }
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "tools": {
+    "profile": "coding"
+  },
+  "auth": {
+    "profiles": {
+      "google:default": {
+        "provider": "google",
+        "mode": "api_key"
+      }
+    }
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "groups": {
+        "*": {
+          "requireMention": true
+        }
+      },
+      "botToken": "REDACTED",
+      "dmPolicy": "allowlist",
+      "allowFrom": [
+        "8092143549"
+      ]
+    }
+  },
+  "wizard": {
+    "lastRunAt": "2026-04-19T13:31:34.269Z",
+    "lastRunVersion": "2026.4.15",
+    "lastRunCommand": "onboard",
+    "lastRunMode": "local"
+  },
+  "meta": {
+    "lastTouchedVersion": "2026.4.15",
+    "lastTouchedAt": "2026-04-19T13:57:29.189Z"
+  },
+  "plugins": {
+    "entries": {
+      "google": {
+        "enabled": true
+      }
+    }
+  }
+}
+
+--- VERIFICATION SCRIPT OUTPUT ---
+==========================================
+Visa Agent Verification
+==========================================
+
+1. Checking project structure...
+[0;32m✓ PASS[0m visa-agent directory exists
+[0;32m✓ PASS[0m src directory exists
+[0;32m✓ PASS[0m server.ts exists
+[0;32m✓ PASS[0m visa_data directory exists
+[0;32m✓ PASS[0m logs directory exists
+[0;32m✓ PASS[0m screenshots directory exists
+
+2. Checking .env configuration...
+[0;32m✓ PASS[0m .env file exists
+[0;32m✓ PASS[0m TELEGRAM_TOKEN is set
+[0;32m✓ PASS[0m TELEGRAM_ALLOWED_USER_ID is set
+[0;32m✓ PASS[0m PASSPHRASE is set
+[0;32m✓ PASS[0m CHROME_USER_DATA is set
+[0;32m✓ PASS[0m CHROME_PROFILE is set
+
+3. Checking client data...
+[1;33m⚠ WARN[0m client.enc missing – you need to create it with real client data
+
+4. Checking browser profile...
+[0;32m✓ PASS[0m Browser profile exists at /home/samsepi0l/.config/google-chrome/tls-work
+[0;32m✓ PASS[0m Session cookies found
+
+5. Checking systemd service...
+[0;32m✓ PASS[0m visa-agent service is running
+
+6. Checking health endpoint...
+[0;32m✓ PASS[0m Health endpoint responds
+   Health response: {"circuit":"CLOSED"}
+
+7. Checking OpenClaw skill...
+[0;32m✓ PASS[0m OpenClaw skill directory exists
+[0;32m✓ PASS[0m SKILL.md exists
+
+8. Checking Playwright browsers...
+[0;32m✓ PASS[0m Playwright browsers cached
+
+9. Checking running processes...
+[0;32m✓ PASS[0m visa-agent process is running
+
+10. Checking Node.js version...
+[0;32m✓ PASS[0m Node version v22.22.2 (OK)
+
+==========================================
+Verification complete.
+==========================================
+
+Next steps if all passed:
+  - Test the service manually: curl -X POST http://127.0.0.1:7432/run
+  - Watch logs: journalctl --user -u visa-agent -f
+  - Or trigger via OpenClaw: openclaw run visa-tls-run
+
+If any checks failed, fix them before proceeding.
+
+--- LAST 50 LINES OF SERVICE LOG ---
+Apr 19 16:28:57 aquarium npx[18718]: Call log:
+Apr 19 16:28:57 aquarium npx[18718]:   - navigating to "https://visas-pt.tlscontact.com/appointments/check", waiting until "networkidle"
+Apr 19 16:28:57 aquarium npx[18718]:  {"name":"Error","stack":"page.goto: net::ERR_INTERNET_DISCONNECTED at https://visas-pt.tlscontact.com/appointments/check\nCall log:\n  - navigating to \"https://visas-pt.tlscontact.com/appointments/check\", waiting until \"networkidle\"\n\n    at runTask (/home/samsepi0l/visa-agent/src/server.ts:227:16)","timestamp":"2026-04-19T15:28:57.241Z"}
+Apr 19 16:31:23 aquarium npx[18718]: error: Unhandled task error page.goto: net::ERR_INTERNET_DISCONNECTED at https://visas-pt.tlscontact.com/appointments/check
+Apr 19 16:31:23 aquarium npx[18718]: Call log:
+Apr 19 16:31:23 aquarium npx[18718]:   - navigating to "https://visas-pt.tlscontact.com/appointments/check", waiting until "networkidle"
+Apr 19 16:31:23 aquarium npx[18718]:  {"name":"Error","stack":"page.goto: net::ERR_INTERNET_DISCONNECTED at https://visas-pt.tlscontact.com/appointments/check\nCall log:\n  - navigating to \"https://visas-pt.tlscontact.com/appointments/check\", waiting until \"networkidle\"\n\n    at runTask (/home/samsepi0l/visa-agent/src/server.ts:227:16)","timestamp":"2026-04-19T15:31:23.927Z"}
+Apr 19 16:31:34 aquarium npx[18718]: error: Unhandled task error page.goto: net::ERR_INTERNET_DISCONNECTED at https://visas-pt.tlscontact.com/appointments/check
+Apr 19 16:31:34 aquarium npx[18718]: Call log:
+Apr 19 16:31:34 aquarium npx[18718]:   - navigating to "https://visas-pt.tlscontact.com/appointments/check", waiting until "networkidle"
+Apr 19 16:31:34 aquarium npx[18718]:  {"name":"Error","stack":"page.goto: net::ERR_INTERNET_DISCONNECTED at https://visas-pt.tlscontact.com/appointments/check\nCall log:\n  - navigating to \"https://visas-pt.tlscontact.com/appointments/check\", waiting until \"networkidle\"\n\n    at runTask (/home/samsepi0l/visa-agent/src/server.ts:227:16)","timestamp":"2026-04-19T15:31:34.618Z"}
+Apr 19 16:37:44 aquarium npx[18718]: info: Next scheduled run at 2026-04-19T15:53:44.169Z (in 16 minutes) {"timestamp":"2026-04-19T15:37:44.169Z"}
+Apr 19 16:37:44 aquarium npx[18718]: error: undefined {"name":"Error","timestamp":"2026-04-19T15:37:44.962Z"}
+Apr 19 16:43:31 aquarium systemd[1493]: Stopping visa-agent.service - Visa Appointment Agent (visa-core)...
+Apr 19 16:43:31 aquarium systemd[1493]: Stopped visa-agent.service - Visa Appointment Agent (visa-core).
+Apr 19 16:43:31 aquarium systemd[1493]: visa-agent.service: Consumed 8.697s CPU time, 273.6M memory peak, 0B memory swap peak.
+Apr 19 16:43:31 aquarium systemd[1493]: Started visa-agent.service - Visa Appointment Agent (visa-core).
+Apr 19 16:43:34 aquarium npx[19646]: info: Next scheduled run at 2026-04-19T16:06:34.694Z (in 23 minutes) {"timestamp":"2026-04-19T15:43:34.695Z"}
+Apr 19 16:43:34 aquarium npx[19646]: info: Service ready {"timestamp":"2026-04-19T15:43:34.778Z"}
+Apr 19 16:43:49 aquarium systemd[1493]: Stopping visa-agent.service - Visa Appointment Agent (visa-core)...
+Apr 19 16:43:49 aquarium systemd[1493]: Stopped visa-agent.service - Visa Appointment Agent (visa-core).
+Apr 19 16:43:49 aquarium systemd[1493]: visa-agent.service: Consumed 4.309s CPU time.
+Apr 19 16:43:49 aquarium systemd[1493]: Started visa-agent.service - Visa Appointment Agent (visa-core).
+Apr 19 16:43:52 aquarium npx[19721]: info: Next scheduled run at 2026-04-19T16:03:52.315Z (in 20 minutes) {"timestamp":"2026-04-19T15:43:52.316Z"}
+Apr 19 16:43:52 aquarium npx[19721]: info: Service ready {"timestamp":"2026-04-19T15:43:52.360Z"}
+Apr 19 16:44:26 aquarium systemd[1493]: Stopping visa-agent.service - Visa Appointment Agent (visa-core)...
+Apr 19 16:44:26 aquarium systemd[1493]: Stopped visa-agent.service - Visa Appointment Agent (visa-core).
+Apr 19 16:44:26 aquarium systemd[1493]: visa-agent.service: Consumed 4.164s CPU time.
+-- Boot 2f3935686d504a4ab7c84c325d0d58aa --
+Apr 20 10:39:50 aquarium systemd[1142]: Started visa-agent.service - Visa Appointment Agent (visa-core).
+Apr 20 10:39:55 aquarium npx[1451]: info: Next scheduled run at 2026-04-20T09:57:55.896Z (in 18 minutes) {"timestamp":"2026-04-20T09:39:55.897Z"}
+Apr 20 10:39:55 aquarium npx[1451]: info: Service ready {"timestamp":"2026-04-20T09:39:55.988Z"}
+Apr 20 10:41:44 aquarium npx[1451]: error: [polling_error] {"code":"ETELEGRAM","message":"ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running"}
+Apr 20 10:57:58 aquarium npx[1451]: info: Next scheduled run at 2026-04-20T10:09:58.449Z (in 12 minutes) {"timestamp":"2026-04-20T09:57:58.449Z"}
+Apr 20 10:58:00 aquarium npx[1451]: error: undefined {"name":"Error","timestamp":"2026-04-20T09:58:00.536Z"}
+Apr 20 11:09:58 aquarium npx[1451]: info: Next scheduled run at 2026-04-20T10:22:58.452Z (in 13 minutes) {"timestamp":"2026-04-20T10:09:58.452Z"}
+Apr 20 11:09:59 aquarium npx[1451]: error: undefined {"name":"Error","timestamp":"2026-04-20T10:09:59.661Z"}
+Apr 20 11:21:23 aquarium systemd[1142]: Stopping visa-agent.service - Visa Appointment Agent (visa-core)...
+Apr 20 11:21:23 aquarium systemd[1142]: Stopped visa-agent.service - Visa Appointment Agent (visa-core).
+Apr 20 11:21:23 aquarium systemd[1142]: visa-agent.service: Consumed 18.557s CPU time.
+Apr 20 11:21:23 aquarium systemd[1142]: Started visa-agent.service - Visa Appointment Agent (visa-core).
+Apr 20 11:21:25 aquarium npx[4853]: info: Next scheduled run at 2026-04-20T10:35:25.414Z (in 14 minutes) {"timestamp":"2026-04-20T10:21:25.415Z"}
+Apr 20 11:21:25 aquarium npx[4853]: info: Service ready {"timestamp":"2026-04-20T10:21:25.451Z"}
+Apr 20 11:21:27 aquarium npx[4853]: error: Unhandled task error page.goto: net::ERR_INTERNET_DISCONNECTED at https://visas-pt.tlscontact.com/appointments/check
+Apr 20 11:21:27 aquarium npx[4853]: Call log:
+Apr 20 11:21:27 aquarium npx[4853]:   - navigating to "https://visas-pt.tlscontact.com/appointments/check", waiting until "networkidle"
+Apr 20 11:21:27 aquarium npx[4853]:  {"name":"Error","stack":"page.goto: net::ERR_INTERNET_DISCONNECTED at https://visas-pt.tlscontact.com/appointments/check\nCall log:\n  - navigating to \"https://visas-pt.tlscontact.com/appointments/check\", waiting until \"networkidle\"\n\n    at runTask (/home/samsepi0l/visa-agent/src/server.ts:227:16)","timestamp":"2026-04-20T10:21:27.252Z"}
+Apr 20 11:23:33 aquarium npx[4853]: error: Unhandled task error page.goto: net::ERR_INTERNET_DISCONNECTED at https://visas-pt.tlscontact.com/appointments/check
+Apr 20 11:23:33 aquarium npx[4853]: Call log:
+Apr 20 11:23:33 aquarium npx[4853]:   - navigating to "https://visas-pt.tlscontact.com/appointments/check", waiting until "networkidle"
+Apr 20 11:23:33 aquarium npx[4853]:  {"name":"Error","stack":"page.goto: net::ERR_INTERNET_DISCONNECTED at https://visas-pt.tlscontact.com/appointments/check\nCall log:\n  - navigating to \"https://visas-pt.tlscontact.com/appointments/check\", waiting until \"networkidle\"\n\n    at runTask (/home/samsepi0l/visa-agent/src/server.ts:227:16)","timestamp":"2026-04-20T10:23:33.087Z"}
+
+--- BROWSER PROFILE ---
+total 100
+drwx------ 10 samsepi0l samsepi0l  4096 Apr 20 11:23 .
+drwx------  4 samsepi0l samsepi0l  4096 Apr 19 16:24 ..
+drwx------  2 samsepi0l samsepi0l  4096 Apr 19 16:24 component_crx_cache
+drwx------ 23 samsepi0l samsepi0l  4096 Apr 20 11:23 Default
+-rw-------  1 samsepi0l samsepi0l 49152 Apr 20 11:23 first_party_sets.db
+-rw-------  1 samsepi0l samsepi0l     0 Apr 20 11:23 first_party_sets.db-journal
+drwx------  2 samsepi0l samsepi0l  4096 Apr 19 16:24 GraphiteDawnCache
+drwx------  2 samsepi0l samsepi0l  4096 Apr 19 16:24 GrShaderCache
+-rw-rw-r--  1 samsepi0l samsepi0l    14 Apr 20 11:23 Last Version
+-rw-------  1 samsepi0l samsepi0l  3462 Apr 20 11:23 Local State
+drwx------  2 samsepi0l samsepi0l  4096 Apr 19 16:24 NativeMessagingHosts
+drwx------  2 samsepi0l samsepi0l  4096 Apr 19 16:24 Safe Browsing
+drwx------  2 samsepi0l samsepi0l  4096 Apr 19 16:24 segmentation_platform
+drwx------  2 samsepi0l samsepi0l  4096 Apr 19 16:24 ShaderCache
+-rw-rw-r--  1 samsepi0l samsepi0l    85 Apr 20 11:23 Variations
+Profile size: 3.1M
+Cookies file exists: NO
+
+--- CLIENT DATA ---
+client.enc missing
+
+--- HEALTH ENDPOINT ---
+{"circuit":"CLOSED"}
+--- NETWORK CHECK ---
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+HTTP/2 403 
+date: Mon, 20 Apr 2026 10:28:04 GMT
+
+--- RUNNING PROCESSES ---
+samsepi+    1278  9.4  7.5 12442212 601564 ?     Ssl  10:39   4:32 openclaw-gateway
+samsepi+    1885  0.4  0.6 476124 49648 ?        Sl   10:40   0:13 xfce4-terminal --geometry=168x38 --display :0.0 --role=xfce4-terminal-1776262194-3714754414 --workspace 0 --show-menubar --show-borders --hide-toolbar --working-directory /home/samsepi0l/horizon/horizon-travel-agency-platform --tab --working-directory /home/samsepi0l --tab --active-tab --working-directory /home/samsepi0l/visa-agent --sm-client-id 2234f6058-e476-456c-a000-2d634e41e10f
+samsepi+    4826  0.1  0.9 1199632 76132 ?       Ssl  11:21   0:00 npm exec tsx src/server.ts
+samsepi+    4841  0.0  0.0   2808  1840 ?        S    11:21   0:00 sh -c tsx src/server.ts
+samsepi+    4842  0.1  0.7 1047184 58200 ?       Sl   11:21   0:00 node /home/samsepi0l/visa-agent/node_modules/.bin/tsx src/server.ts
+samsepi+    4853  0.6  1.5 33217520 125224 ?     Sl   11:21   0:02 /usr/bin/node --require /home/samsepi0l/visa-agent/node_modules/tsx/dist/preflight.cjs --import file:///home/samsepi0l/visa-agent/node_modules/tsx/dist/loader.mjs src/server.ts
+samsepi+    5272  0.0  0.0   8304  1996 pts/2    S+   11:28   0:00 tee -a /home/samsepi0l/visa-agent/review_20260420_112803.txt
+
+==========================================
+Review complete. File saved to: /home/samsepi0l/visa-agent/review_20260420_112803.txt
+You can now copy the entire content of this file and paste it to Claude or Grok.
+==========================================

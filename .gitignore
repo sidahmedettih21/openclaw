@@ -1,24 +1,9 @@
-# Secrets and credentials
 .env
-*.enc
 visa_data/*.enc
-
-# Dependencies
-node_modules/
-
-# Logs and screenshots
 logs/
 screenshots/
-
-# System files
-.DS_Store
+node_modules/
 *.log
 *.tmp
-
-# Playwright browsers (too large)
-.cache/
-~/.cache/ms-playwright/
-
-# IDE
-.vscode/
-.idea/
+slot_checks.csv
+.DS_Store
