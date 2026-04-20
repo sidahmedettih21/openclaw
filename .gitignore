@@ -1,21 +1,24 @@
-# Dependencies
-node_modules/
-
-# Environment variables (contains API keys, tokens, passphrase)
+# Environment files with secrets
 .env
+.env.local
+.env.*.local
 
-# Encrypted client data (passports, personal info)
-visa_data/*.enc
+# Encrypted client data (sensitive)
+visa_data/client.enc
 
 # Logs and screenshots
 logs/
 screenshots/
+*.log
 
-# OS junk
+# Node modules (can be regenerated with npm install)
+node_modules/
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# System files
 .DS_Store
 Thumbs.db
-
-# Editor files
-*.swp
-*.swo
-*~
