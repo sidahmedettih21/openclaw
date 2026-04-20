@@ -1,57 +1,15 @@
 #!/bin/bash
-echo "=========================================="
-echo "Slot Monitoring System Verification"
-echo "=========================================="
-
-# 1. Check if curl works
-echo -n "1. curl reachable? "
-if curl -s -o /dev/null -w "%{http_code}" "https://visas-pt.tlscontact.com" | grep -q "200\|302\|403"; then
-    echo "✅ Yes (HTTP $(curl -s -o /dev/null -w "%{http_code}" "https://visas-pt.tlscontact.com"))"
-else
-    echo "❌ No - network issue"
-fi
-
-# 2. Check if xdotool is installed
-echo -n "2. xdotool installed? "
-if command -v xdotool &> /dev/null; then
-    echo "✅ Yes"
-else
-    echo "❌ No - run: sudo apt install xdotool"
-fi
-
-# 3. Find Chrome window with TLScontact page
-echo -n "3. Chrome window with TLScontact open? "
-WINDOW_ID=$(xdotool search --name "TLScontact" | head -1)
-if [ -n "$WINDOW_ID" ]; then
-    echo "✅ Yes (window ID: $WINDOW_ID)"
-else
-    echo "⚠️ No - open the appointment page in Chrome and keep it visible"
-fi
-
-# 4. Check Telegram credentials in environment
-echo -n "4. Telegram token set? "
-if [ -n "$TELEGRAM_TOKEN" ] && [ "$TELEGRAM_TOKEN" != "your_token" ]; then
-    echo "✅ Yes"
-else
-    echo "❌ No - run: export TELEGRAM_TOKEN='your_token'"
-fi
-
-echo -n "5. Telegram chat ID set? "
-if [ -n "$TELEGRAM_ALLOWED_USER_ID" ] && [ "$TELEGRAM_ALLOWED_USER_ID" != "your_id" ]; then
-    echo "✅ Yes"
-else
-    echo "❌ No - run: export TELEGRAM_ALLOWED_USER_ID='your_id'"
-fi
-
-# 6. Check if slot-watcher script exists and is executable
-echo -n "6. slot-watcher.sh ready? "
-if [ -x ~/visa-agent/slot-watcher.sh ]; then
-    echo "✅ Yes"
-else
-    echo "❌ No - run: chmod +x ~/visa-agent/slot-watcher.sh"
-fi
-
-echo "=========================================="
-echo "If all checks pass, run: ./slot-watcher.sh"
-echo "Keep Chrome open on the appointment page."
-echo "=========================================="
+echo "=== Slot Monitoring System Verification ==="
+echo -n "1. tsx and server running? "
+pgrep -f "tsx src/server.ts" > /dev/null && echo "✅" || echo "❌ (run: ./restore_and_run.sh)"
+echo -n "2. api_watcher running? (optional) "
+pgrep -f "api_watcher.py" > /dev/null && echo "✅" || echo "⚠️ Not needed (monitor uses internal loop)"
+echo -n "3. Telegram 409 conflict? "
+journalctl --user -u visa-agent -n 20 2>/dev/null | grep -q "409" && echo "⚠️ Still present" || echo "✅ Resolved"
+echo -n "4. Network reachable (google)? "
+curl -s -o /dev/null -w "%{http_code}" https://google.com | grep -q "200\|301\|302" && echo "✅" || echo "❌"
+echo -n "5. Config file valid? "
+python3 -c "import yaml; yaml.safe_load(open('config.yaml'))" 2>/dev/null && echo "✅" || echo "❌"
+echo -n "6. Browser profile exists? "
+[ -d "/home/samsepi0l/.config/google-chrome/tls-work" ] && echo "✅" || echo "❌"
+echo "=== To see live logs: tmux attach -t visa ==="

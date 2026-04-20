@@ -1,24 +1,26 @@
 // ============================================================
-// Complete TLScontact Automation – Login → App Selection → Slot Monitor
+// TLScontact Appointment Slot Monitor – NSA Edition
 // ============================================================
 import "dotenv/config";
 import express from "express";
 import { randomUUID } from "crypto";
 import { createLogger, format, transports } from "winston";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync } from "fs";
 import path from "path";
 import os from "os";
-import { chromium, type BrowserContext, type Page } from "playwright";
+import type { Page } from "playwright";
+import { createBrowserContext } from "./browser.js";
 import TelegramBot from "node-telegram-bot-api";
 
-// ---------- Directories ----------
+// ------------------------------------------------------------------
+// Directories & Logging
+// ------------------------------------------------------------------
 const HOME = os.homedir();
 const AGENT_DIR = path.join(HOME, "visa-agent");
 const LOGS_DIR = path.join(AGENT_DIR, "logs");
 const CSV_LOG = path.join(AGENT_DIR, "slot_checks.csv");
 for (const d of [LOGS_DIR]) mkdirSync(d, { recursive: true });
 
-// ---------- Logger ----------
 const logger = createLogger({
   level: "info",
   format: format.combine(format.timestamp(), format.json()),
@@ -28,141 +30,90 @@ const logger = createLogger({
   ],
 });
 
-// ---------- CSV logging ----------
 function logToCSV(status: string, details: string = "") {
   const row = `${new Date().toISOString()},${status},${details}\n`;
-  if (!existsSync(CSV_LOG)) writeFileSync(CSV_LOG, "timestamp,status,details\n");
-  writeFileSync(CSV_LOG, row, { flag: "a" });
+  if (!existsSync(CSV_LOG)) {
+    require("fs").writeFileSync(CSV_LOG, "timestamp,status,details\n");
+  }
+  require("fs").appendFileSync(CSV_LOG, row);
 }
 
-// ---------- Telegram ----------
+// ------------------------------------------------------------------
+// Telegram
+// ------------------------------------------------------------------
 const ALLOWED_ID = parseInt(process.env.TELEGRAM_ALLOWED_USER_ID!, 10);
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: false });
 
 async function notify(text: string) {
-  try { await bot.sendMessage(ALLOWED_ID, text, { parse_mode: "Markdown" }); }
-  catch (e) { logger.error("Telegram failed", { error: String(e) }); }
+  try {
+    await bot.sendMessage(ALLOWED_ID, text, { parse_mode: "Markdown" });
+  } catch (e) {
+    logger.error("Telegram failed", { error: String(e) });
+  }
 }
 
-async function sendScreenshot(imgPath: string, caption: string) {
-  try { await bot.sendPhoto(ALLOWED_ID, imgPath, { caption }); }
-  catch (e) { logger.error("Photo failed", { error: String(e) }); }
+// ------------------------------------------------------------------
+// Helper: random human‑like delay
+// ------------------------------------------------------------------
+function randomDelay(min = 300, max = 800): Promise<void> {
+  return new Promise((r) => setTimeout(r, Math.random() * (max - min) + min));
 }
 
-// ---------- Hardened browser context ----------
-async function createContext(): Promise<BrowserContext> {
-  const profilePath = path.join(
-    process.env.CHROME_USER_DATA ?? path.join(HOME, ".config/google-chrome"),
-    process.env.CHROME_PROFILE ?? "tls-work"
-  );
-
-  logger.info(`Launching browser with profile: ${profilePath}`);
-
-  const ctx = await chromium.launchPersistentContext(profilePath, {
-    executablePath: process.env.CHROME_BIN ?? "/usr/bin/google-chrome",
-    headless: false,
-    args: [
-      "--disable-blink-features=AutomationControlled",
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--disable-software-rasterizer",
-      "--disable-background-timer-throttling",
-      "--disable-backgrounding-occluded-windows",
-      "--disable-renderer-backgrounding",
-      "--disable-ipc-flooding-protection",
-      "--disable-features=IsolateOrigins,site-per-process",
-      "--disable-site-isolation-trials",
-      "--disable-web-security",
-      "--disable-features=ChromeWhatsNewUI",
-      "--disable-default-apps",
-      "--disable-extensions",
-      "--disable-component-extensions-with-background-pages",
-      "--disable-client-side-phishing-detection",
-      "--disable-crash-reporter",
-      "--disable-logging",
-      "--disable-notifications",
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--use-fake-ui-for-media-stream",
-      "--window-size=1280,800",
-      "--start-maximized",
-      "--lang=en-US",
-      "--flag-switches-begin",
-      "--disable-features=OutOfBlinkCors",
-      "--flag-switches-end",
-    ],
-    permissions: [],
-    locale: "en-US",
-    timezoneId: "Africa/Algiers",
-    userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    viewport: { width: 1280, height: 800 },
-  });
-
-  await ctx.addInitScript(() => {
-    Object.defineProperty(navigator, "webdriver", { get: () => undefined });
-    Object.defineProperty(navigator, "plugins", { get: () => [1, 2, 3, 4, 5] });
-    Object.defineProperty(navigator, "languages", { get: () => ["en-US", "en"] });
-    if (!(window as any).chrome) (window as any).chrome = { runtime: {} };
-    (window as any).navigator.permissions.query = (params: any) => {
-      if (params.name === "notifications") return Promise.resolve({ state: "denied" });
-      return Promise.resolve({ state: "prompt" });
-    };
-    Object.defineProperty(navigator, "connection", { get: () => ({ rtt: 50, downlink: 10 }) });
-  });
-
-  return ctx;
-}
-
-function randomDelay(min = 500, max = 2000): Promise<void> {
-  return new Promise(r => setTimeout(r, Math.random() * (max - min) + min));
-}
-
-// ---------- Step‑by‑step navigation to the appointment page ----------
+// ------------------------------------------------------------------
+// Navigate to the appointment booking page (full flow)
+// ------------------------------------------------------------------
 async function navigateToAppointmentBooking(page: Page): Promise<boolean> {
   try {
-    // Step 1: Go to main page (already logged in, but may be redirected)
-    await page.goto("https://visas-pt.tlscontact.com", { waitUntil: "domcontentloaded", timeout: 30000 });
+    // Step 1: Home page
+    await page.goto("https://visas-pt.tlscontact.com", {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
     await randomDelay(1000, 2000);
 
-    // If login page appears, credentials are saved in profile – just click login button
-    const loginButton = page.locator('button:has-text("Login"), a:has-text("Login")').first();
-    if (await loginButton.count()) {
-      await loginButton.click();
+    // If login page appears, click login (credentials already saved in profile)
+    const loginBtn = page.locator('button:has-text("Login"), a:has-text("Login")').first();
+    if (await loginBtn.count()) {
+      await loginBtn.click();
       await page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 15000 });
       await randomDelay(1000, 2000);
     }
 
-    // Step 2: Select country – Algeria
-    await page.goto("https://visas-pt.tlscontact.com/en-us/country-selection", { waitUntil: "domcontentloaded" });
+    // Step 2: Country selection – Algeria
+    await page.goto("https://visas-pt.tlscontact.com/en-us/country-selection", {
+      waitUntil: "domcontentloaded",
+    });
     await page.click('a:has-text("Algeria"), button:has-text("Algeria")');
     await randomDelay(1000, 2000);
 
-    // Step 3: Select city – Algiers
-    await page.goto("https://visas-pt.tlscontact.com/en-us/center-selection?country=DZ", { waitUntil: "domcontentloaded" });
+    // Step 3: City selection – Algiers
+    await page.goto("https://visas-pt.tlscontact.com/en-us/center-selection?country=DZ", {
+      waitUntil: "domcontentloaded",
+    });
     await page.click('a:has-text("Algiers"), button:has-text("Algiers")');
     await randomDelay(1000, 2000);
 
-    // Step 4: Select application "388184"
-    await page.goto("https://visas-pt.tlscontact.com/en-us/application-list", { waitUntil: "domcontentloaded" });
+    // Step 4: Application list – select 388184
+    await page.goto("https://visas-pt.tlscontact.com/en-us/application-list", {
+      waitUntil: "domcontentloaded",
+    });
     await page.click('tr:has-text("388184") a, button:has-text("Select")');
     await randomDelay(1000, 2000);
 
     // Step 5: Courier delivery step (if present)
-    const continueButton = page.locator('button:has-text("Continue")').first();
-    if (await continueButton.count()) {
-      await continueButton.click();
+    const continueBtn = page.locator('button:has-text("Continue")').first();
+    if (await continueBtn.count()) {
+      await continueBtn.click();
       await page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 15000 });
       await randomDelay(1000, 2000);
     }
 
-    // Step 6: Arrive at appointment booking page
-    const targetUrl = "https://visas-pt.tlscontact.com/en-us/388184/workflow/appointment-booking?location=dzALG2pt";
+    // Step 6: Appointment booking page
+    const targetUrl =
+      "https://visas-pt.tlscontact.com/en-us/388184/workflow/appointment-booking?location=dzALG2pt";
     await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
     await page.waitForLoadState("networkidle", { timeout: 20000 }).catch(() => {});
     await randomDelay(500, 1500);
-
     return true;
   } catch (err) {
     logger.error("Navigation failed", { error: String(err) });
@@ -170,21 +121,37 @@ async function navigateToAppointmentBooking(page: Page): Promise<boolean> {
   }
 }
 
-// ---------- Slot monitoring (called repeatedly) ----------
+// ------------------------------------------------------------------
+// Main monitoring loop – checks every 5 seconds
+// ------------------------------------------------------------------
 async function monitorAndBook() {
-  let ctx: BrowserContext | null = null;
   const checkId = randomUUID().slice(0, 6);
+  let ctx: Awaited<ReturnType<typeof createBrowserContext>> | null = null;
+
+  // Network pre‑check
+  try {
+    await fetch("https://1.1.1.1", { method: "HEAD", signal: AbortSignal.timeout(3000) });
+  } catch {
+    logger.warn(`[${checkId}] No internet – skipping`);
+    return;
+  }
 
   try {
-    ctx = await createContext();
-    const page = ctx.pages()[0] ?? await ctx.newPage();
+    const profilePath = path.join(
+      process.env.CHROME_USER_DATA ?? path.join(HOME, ".config/google-chrome"),
+      process.env.CHROME_PROFILE ?? "tls-work"
+    );
+    ctx = await createBrowserContext(profilePath, process.env.CHROME_BIN ?? "/usr/bin/google-chrome");
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
 
-    // Navigate to appointment page (full flow)
-    const success = await navigateToAppointmentBooking(page);
-    if (!success) throw new Error("Failed to reach appointment page");
+    // Navigate to appointment page
+    const navOk = await navigateToAppointmentBooking(page);
+    if (!navOk) throw new Error("Failed to reach appointment page");
 
-    // Check for block page
-    const blocked = await page.evaluate(() => document.body.innerText.includes("You Have Been Blocked"));
+    // Check for Cloudflare block
+    const blocked = await page
+      .evaluate(() => document.body.innerText.includes("You Have Been Blocked"))
+      .catch(() => false);
     if (blocked) {
       logger.error(`[${checkId}] Blocked by Cloudflare`);
       await notify("🚫 *Blocked by TLScontact!* Manual intervention required.");
@@ -192,10 +159,14 @@ async function monitorAndBook() {
       return;
     }
 
-    // Check for slot availability
+    // Detect slot
     const hasSlot = await page.evaluate(() => {
       const body = document.body.innerText;
-      return body.includes("Select a slot") || body.includes("appointment slots available") || !!document.querySelector(".slot-item, .available-slot");
+      return (
+        body.includes("Select a slot") ||
+        body.includes("appointment slots available") ||
+        !!document.querySelector(".slot-item, .available-slot, [class*='slot']:not([class*='unavailable'])")
+      );
     });
 
     if (!hasSlot) {
@@ -204,19 +175,25 @@ async function monitorAndBook() {
       return;
     }
 
-    // Slot found!
+    // Slot found – click it!
     logToCSV("SLOT_FOUND", checkId);
     await notify("🎉 *SLOT FOUND!* Attempting to book...");
 
-    // Click first available slot
     const clicked = await page.evaluate(() => {
-      const slot = document.querySelector(".slot-item, .available-slot, [class*='slot']:not([class*='unavailable'])");
-      if (slot) { (slot as HTMLElement).click(); return true; }
+      const slot = document.querySelector(
+        ".slot-item, .available-slot, [class*='slot']:not([class*='unavailable'])"
+      ) as HTMLElement;
+      if (slot) {
+        slot.click();
+        return true;
+      }
       return false;
     });
 
     if (!clicked) {
-      const slot = page.locator('.slot-item, .available-slot, [class*="slot"]:not([class*="unavailable"])').first();
+      const slot = page
+        .locator('.slot-item, .available-slot, [class*="slot"]:not([class*="unavailable"])')
+        .first();
       if (await slot.count()) await slot.click();
       else throw new Error("No clickable slot found");
     }
@@ -224,13 +201,12 @@ async function monitorAndBook() {
     await randomDelay(1000, 2000);
     await page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 10000 }).catch(() => {});
 
+    // Take screenshot and notify
     const shot = path.join(AGENT_DIR, `slot_${Date.now()}.png`);
     await page.screenshot({ path: shot, fullPage: true });
-    await sendScreenshot(shot, "✅ Appointment slot selected! Complete payment manually.");
+    await notify(`✅ *Appointment slot selected!* Screenshot saved. Complete payment manually.`);
 
     logToCSV("BOOKED", checkId);
-    await notify("📅 *Slot selected!* Finalise payment in the browser.");
-
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error(`[${checkId}] Monitor error`, { error: msg });
@@ -241,28 +217,33 @@ async function monitorAndBook() {
   }
 }
 
-// ---------- HTTP server ----------
+// ------------------------------------------------------------------
+// HTTP server (for manual trigger)
+// ------------------------------------------------------------------
 const app = express();
 app.use(express.json());
 app.use((req, res, next) => {
   const ip = req.socket.remoteAddress ?? "";
-  if (!["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(ip)) return res.status(403).end();
+  if (!["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(ip))
+    return res.status(403).json({ error: "Forbidden" });
   next();
 });
 
 app.post("/run", async (_req, res) => {
   res.json({ ok: true });
-  await monitorAndBook();
+  monitorAndBook().catch((e) => logger.error("Manual run error", e));
 });
 app.get("/health", (_req, res) => res.json({ ok: true, uptime: process.uptime() }));
 
 const PORT = parseInt(process.env.CONTROL_PORT ?? "7432", 10);
 app.listen(PORT, "127.0.0.1", () => logger.info(`Monitor ready on :${PORT}`));
 
-// Run every 30 seconds automatically
+// ------------------------------------------------------------------
+// Continuous loop – check every 5 seconds
+// ------------------------------------------------------------------
 setInterval(() => {
-  monitorAndBook().catch(e => logger.error("Loop error", e));
-}, 30_000);
+  monitorAndBook().catch((e) => logger.error("Loop error", e));
+}, 5000); // <-- 5 seconds
 
 // Run once on start
-monitorAndBook().catch(e => logger.error("Startup error", e));
+monitorAndBook().catch((e) => logger.error("Startup error", e));

@@ -302,7 +302,14 @@ async function runTask(cid: string): Promise<void> {
     await notify(`🌐 No internet \`[${cid}]\` — skipping`, cid);
     return;
   }
-
+  // Network check – skip run if no internet
+  try {
+    await fetch("https://1.1.1.1", { method: "HEAD", signal: AbortSignal.timeout(3000) });
+  } catch {
+    logger.warn(`[${cid}] No internet – skipping run`);
+    await notify(`🌐 No internet connection – task skipped`, cid);
+    return;
+  }
   let ctx: BrowserContext | null = null;
   logger.info(`Task started [${cid}]`);
 
