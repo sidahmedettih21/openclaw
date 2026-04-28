@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>TLScontact Appointment Booking - Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Open Sans', sans-serif;
+            background: #f0f2f5;
+            color: #1a1f36;
+            line-height: 1.4;
+        }
+
+        /* ========== HEADER / NAVIGATION ========== */
+        .main-header {
+            background: #003399;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .logo span {
+            color: #ffcc00;
+        }
+        .user-menu {
+            font-size: 14px;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 24px;
+            cursor: default;
+        }
+
+        /* ========== PROGRESS BAR ========== */
+        .progress-steps {
+            background: #002266;
+            padding: 12px 24px;
+            display: flex;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+        }
+        .step {
+            color: rgba(255,255,255,0.6);
+        }
+        .step.active {
+            color: white;
+            font-weight: 600;
+        }
+        .step-sep {
+            color: rgba(255,255,255,0.3);
+            margin: 0 6px;
+        }
+
+        /* ========== MAIN CONTAINER ========== */
+        .container {
+            max-width: 1000px;
+            margin: 32px auto;
+            padding: 0 20px;
+        }
+
+        /* ========== CARD ========== */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 28px 32px;
+            margin-bottom: 20px;
+            border: 1px solid #e6e9f0;
+        }
+        .card h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #003399;
+            margin-bottom: 4px;
+        }
+        .card-sub {
+            color: #5a6874;
+            font-size: 14px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eef2f6;
+            padding-bottom: 12px;
+        }
+
+        /* ========== MONTH TABS ========== */
+        .month-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .month-btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .month-btn.active {
+            background: #003399;
+            border-color: #003399;
+            color: white;
+        }
+
+        /* ========== NO SLOTS MESSAGE ========== */
+        .no-slots-message {
+            background: #fff8e7;
+            border-left: 4px solid #f5a623;
+            padding: 20px 24px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .no-slots-message p:first-child {
+            font-weight: 700;
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 6px;
+        }
+        .no-slots-message p:last-child {
+            color: #5a6874;
+            font-size: 14px;
+        }
+
+        /* ========== SLOT GRID (DYNAMIC) ========== */
+        .slots-section {
+            margin: 24px 0;
+        }
+        .slot-label {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: #1e293b;
+        }
+        .slot-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        /* Slot Button Style - Real TLScontact Look */
+        .slot-btn {
+            background: white;
+            border: 1.5px solid #10b981;
+            color: #10b981;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+            min-width: 85px;
+            text-align: center;
+        }
+        .slot-btn:hover {
+            background: #10b981;
+            color: white;
+            transform: translateY(-1px);
+        }
+        .slot-btn.selected {
+            background: #003399;
+            border-color: #003399;
+            color: white;
+        }
+
+        /* ========== BOOK BUTTON ========== */
+        .book-button {
+            background: #003399;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 40px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+            transition: background 0.2s;
+            display: inline-block;
+            text-align: center;
+        }
+        .book-button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .book-button:not(:disabled):hover {
+            background: #002266;
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            background: #003399;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 24px;
+            margin-top: 48px;
+            font-size: 13px;
+        }
+
+        /* ========== UTILITIES ========== */
+        .hidden { display: none; }
+        .text-center { text-align: center; }
+        .mt-4 { margin-top: 16px; }
+        .mb-2 { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <div class="main-header">
+        <div class="logo">TLS<span>contact</span></div>
+        <div class="user-menu">👤 visa.applicant@example.com</div>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+        <span class="step">Applicant information</span>
+        <span class="step-sep">›</span>
+        <span class="step">Application Method</span>
+        <span class="step-sep">›</span>
+        <span class="step active">Appointment booking</span>
+        <span class="step-sep">›</span>
+        <span class="step">Order summary</span>
+        <span class="step-sep">›</span>
+        <span class="step">Payment</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="card">
+            <h2>Book your appointment</h2>
+            <div class="card-sub">Algeria — French Consulate, Algiers · Schengen Visa (Type C)</div>
+
+            <!-- Month Selector (Static UI) -->
+            <div class="month-tabs">
+                <button class="month-btn">March 2026</button>
+                <button class="month-btn active">April 2026</button>
+                <button class="month-btn">May 2026</button>
+            </div>
+
+            <!-- No Slots Message (will be hidden when slots appear) -->
+            <div id="noSlotsMessage" class="no-slots-message">
+                <p>⚠️ We currently don’t have any appointment slots available.</p>
+                <p>No slots are currently available. Please check this page regularly, as new appointments are constantly added.</p>
+            </div>
+
+            <!-- Dynamic Slots Section (injected by simulation) -->
+            <div id="slotsSection" class="slots-section">
+                <div class="slot-label">Select a slot</div>
+                <div id="slotGrid" class="slot-grid"></div>
+            </div>
+
+            <!-- Book Button (disabled until a slot is selected) -->
+            <div class="text-center">
+                <button id="bookButton" class="book-button" disabled>Book your appointment</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        © 2026 TLScontact. All rights reserved. This is a simulation environment.
+    </div>
+
+    <script>
+        (function() {
+            // ============================================================
+            // TLScontact Slot Simulation – Realistic & Autonomous
+            // ============================================================
+
+            // --- Config (Adjustable via console: __simConfig.freqMin = 5000) ---
+            let config = {
+                freqMin: 15000,   // minimum ms between slot appearances
+                freqMax: 45000,   // maximum ms between slot appearances
+                durMin: 3000,     // minimum slot visible duration (ms)
+                durMax: 8000,     // maximum slot visible duration (ms)
+                slotCount: 3,     // how many slots appear each time
+            };
+
+            let state = {
+                slotsVisible: false,
+                slotsAppearTime: null,
+                slotExpireTimer: null,
+                scheduleTimer: null,
+                currentSlots: [],      // stores slot DOM elements
+                selectedSlot: null,     // currently selected slot button
+                bookButtonEnabled: false
+            };
+
+            // DOM elements
+            const noSlotsDiv = document.getElementById('noSlotsMessage');
+            const slotGrid = document.getElementById('slotGrid');
+            const bookBtn = document.getElementById('bookButton');
+
+            // Helper: random number between min and max (inclusive)
+            function rand(min, max) {
+                return Math.floor(Math.random() * (max - min + 1) + min);
+            }
+
+            // Helper: generate random time slots (realistic times)
+            function generateRandomSlots(count) {
+                const possibleTimes = [
+                    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+                    '11:00', '11:30', '12:00', '13:00', '13:30', '14:00',
+                    '14:30', '15:00', '15:30', '16:00', '16:30'
+                ];
+                // Shuffle and pick first 'count' elements
+                const shuffled = [...possibleTimes];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled.slice(0, count);
+            }
+
+            // Called when a slot is clicked by the user (or bot)
+            function onSlotClick(btn, time) {
+                if (!state.slotsVisible) return;
+
+                // Calculate reaction time (if we have appearance timestamp)
+                const reactTime = state.slotsAppearTime ? Date.now() - state.slotsAppearTime : null;
+                
+                // Deselect any previously selected slot
+                if (state.selectedSlot) {
+                    state.selectedSlot.classList.remove('selected');
+                    state.selectedSlot.style.background = '';
+                    state.selectedSlot.style.color = '';
+                }
+                
+                // Mark new slot as selected
+                btn.classList.add('selected');
+                btn.style.background = '#003399';
+                btn.style.color = 'white';
+                state.selectedSlot = btn;
+                
+                // Enable the book button
+                bookBtn.disabled = false;
+                state.bookButtonEnabled = true;
+                
+                // Log to console for debugging
+                console.log(`[SIM] Slot clicked: ${time} | React time: ${reactTime ? reactTime + 'ms' : 'N/A'}`);
+                
+                // If a server is present, log the event (optional)
+                if (window.__simServerAvailable) {
+                    fetch('/log-event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'slot_clicked', data: { time, reactTime } })
+                    }).catch(() => {});
+                }
+            }
+
+            // Generate and display slot buttons
+            function showSlots() {
+                if (state.slotsVisible) return;
+                
+                state.slotsVisible = true;
+                state.slotsAppearTime = Date.now();
+                
+                // Hide the "no slots" message
+                if (noSlotsDiv) noSlotsDiv.classList.add('hidden');
+                
+                // Generate slot buttons
+                const count = config.slotCount;
+                const duration = rand(config.durMin, config.durMax);
+                const slotTimes = generateRandomSlots(count);
+                
+                // Clear existing grid
+                slotGrid.innerHTML = '';
+                state.currentSlots = [];
+                
+                // Create and append slot buttons
+                slotTimes.forEach(time => {
+                    const btn = document.createElement('button');
+                    btn.className = 'slot-btn';
+                    btn.textContent = time;
+                    btn.setAttribute('data-time', time);
+                    btn.onclick = () => onSlotClick(btn, time);
+                    slotGrid.appendChild(btn);
+                    state.currentSlots.push(btn);
+                });
+                
+                console.log(`[SIM] Slots appeared! Visible for ${duration}ms. Times: ${slotTimes.join(', ')}`);
+                
+                // Optional: log to server if available
+                if (window.__simServerAvailable) {
+                    fetch('/log-event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'slot_appeared', data: { slots: slotTimes, duration } })
+                    }).catch(() => {});
+                }
+                
+                // Schedule auto-hide after duration
+                state.slotExpireTimer = setTimeout(() => hideSlots('expired'), duration);
+            }
+            
+            // Hide all slots and reset UI
+            function hideSlots(reason) {
+                if (!state.slotsVisible) return;
+                
+                state.slotsVisible = false;
+                if (state.slotExpireTimer) clearTimeout(state.slotExpireTimer);
+                
+                // Show the "no slots" message again
+                if (noSlotsDiv) noSlotsDiv.classList.remove('hidden');
+                
+                // Clear slot grid
+                slotGrid.innerHTML = '';
+                state.currentSlots = [];
+                
+                // Reset selected slot and disable book button
+                state.selectedSlot = null;
+                bookBtn.disabled = true;
+                state.bookButtonEnabled = false;
+                
+                console.log(`[SIM] Slots hidden (reason: ${reason})`);
+                
+                // Optional: log to server
+                if (window.__simServerAvailable) {
+                    fetch('/log-event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'slot_expired', data: { reason } })
+                    }).catch(() => {});
+                }
+            }
+            
+            // Schedule the next slot appearance (recursive)
+            function scheduleNextAppearance() {
+                const delay = rand(config.freqMin, config.freqMax);
+                state.scheduleTimer = setTimeout(() => {
+                    if (!state.slotsVisible) {
+                        showSlots();
+                    }
+                    scheduleNextAppearance();
+                }, delay);
+            }
+            
+            // Book button handler (simulates final step)
+            function onBookClick() {
+                if (!state.selectedSlot || !state.bookButtonEnabled) return;
+                
+                const selectedTime = state.selectedSlot.getAttribute('data-time');
+                const reactTime = state.slotsAppearTime ? Date.now() - state.slotsAppearTime : null;
+                
+                console.log(`[SIM] ✅ BOOKED! Time: ${selectedTime} | Total reaction: ${reactTime ? reactTime + 'ms' : 'N/A'}`);
+                alert(`✅ SIMULATION: Appointment booked at ${selectedTime}!\n\nThe bot would stop here.\nTotal reaction time: ${reactTime ? reactTime + 'ms' : 'N/A'}`);
+                
+                // Optional: log to server
+                if (window.__simServerAvailable) {
+                    fetch('/log-event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'book_clicked', data: { time: selectedTime, reactTime } })
+                    }).catch(() => {});
+                }
+                
+                // Reset the simulation after booking (optional)
+                hideSlots('booked');
+                
+                // Re-enable future appearances
+                if (state.scheduleTimer) clearTimeout(state.scheduleTimer);
+                scheduleNextAppearance();
+            }
+            
+            // Expose configuration and controls to console for testing
+            window.__simConfig = config;
+            window.forceSlot = () => {
+                if (state.scheduleTimer) clearTimeout(state.scheduleTimer);
+                if (state.slotsVisible) hideSlots('manual_override');
+                showSlots();
+                scheduleNextAppearance();
+                console.log('[SIM] Manual slot triggered via window.forceSlot()');
+            };
+            
+            // Detect if server.js is running (optional logging)
+            fetch('/events').then(() => {
+                window.__simServerAvailable = true;
+                console.log('[SIM] Server detected – events will be logged.');
+            }).catch(() => {
+                window.__simServerAvailable = false;
+                console.log('[SIM] Running standalone – no event logging.');
+            });
+            
+            // Attach book button event listener
+            bookBtn.addEventListener('click', onBookClick);
+            
+            // Start the simulation loop
+            scheduleNextAppearance();
+            
+            console.log('[SIM] TLScontact Simulation Ready!');
+            console.log('[SIM] Use window.forceSlot() to trigger slots manually.');
+            console.log('[SIM] Use window.__simConfig to adjust timing (e.g., __simConfig.freqMin = 5000)');
+        })();
+    </script>
+</body>
+</html>
