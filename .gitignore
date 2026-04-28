@@ -7,3 +7,12 @@ node_modules/
 *.tmp
 slot_checks.csv
 .DS_Store
+Burpsuite-Professional/
+.env
+*.log
+cookies.txt
+*.enc
+visa_data/
+node_modules/
+screenshots/
+logs/
