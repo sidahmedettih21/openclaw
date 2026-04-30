@@ -1,0 +1,52 @@
+{
+  "projectOptions": {
+    "proxy": {
+      "listeners": [
+        {
+          "listenMode": "specific",
+          "address": "127.0.0.1",
+          "port": 8080,
+          "enable": true,
+          "invisible": true,
+          "certificateMode": "per-host",
+          "supportHttp2": true
+        }
+      ],
+      "intercept": { "enabled": true, "rules": [] },
+      "matchAndReplace": {
+        "enabled": true,
+        "rules": [
+          {
+            "enabled": true,
+            "type": "request",
+            "match": "User-Agent: .*",
+            "replace": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+          },
+          {
+            "enabled": true,
+            "type": "request",
+            "match": "Sec-Fetch-Mode: navigate",
+            "replace": ""
+          },
+          {
+            "enabled": true,
+            "type": "request",
+            "match": "Sec-Fetch-Site: cross-site",
+            "replace": ""
+          }
+        ]
+      }
+    },
+    "target": {
+      "scope": {
+        "include": [
+          { "protocol": "https", "host": "visas-pt.tlscontact.com", "port": "443", "file": "/.*" },
+          { "protocol": "https", "host": "tlscontact.com", "port": "443", "file": "/.*" }
+        ],
+        "exclude": []
+      }
+    },
+    "ssl": { "passThrough": true, "customCA": true },
+    "performance": { "maxMemory": 512, "threadPoolSize": 4 }
+  }
+}

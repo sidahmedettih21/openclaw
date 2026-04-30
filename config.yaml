@@ -1,0 +1,18 @@
+general:
+  check_interval_seconds: 5
+  max_retries: 3
+  retry_delay_seconds: 2
+
+telegram:
+  enabled: true
+  token_env: "TELEGRAM_TOKEN"
+  chat_id_env: "TELEGRAM_ALLOWED_USER_ID"
+
+api:
+  # These will be filled after Burp capture
+  slot_check_url: "https://visas-pt.tlscontact.com/api/slots/available?appId=388184&location=dzALG2pt"
+  booking_url: "https://visas-pt.tlscontact.com/api/appointment/book"
+  headers:
+    User-Agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    Content-Type: "application/json"
+    # Add any other headers from Burp (Authorization, X-CSRF-Token, etc.)

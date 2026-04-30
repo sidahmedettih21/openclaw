@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TLScontact Simulation – Enhanced</title>
+    <style>
+        body { font-family: Arial; margin: 0; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .cloudflare { background: #f44336; color: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
+        .slot { display: inline-block; background: #4CAF50; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .slot:hover { background: #45a049; }
+        .book-btn { background: #008CBA; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px; }
+        .book-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .warning { background: #ff9800; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .login { background: #2196F3; color: white; padding: 10px; text-align: center; border-radius: 4px; margin-bottom: 20px; cursor: pointer; }
+        #mainContent { display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="cloudflareChallenge" class="cloudflare">
+        <h2>⚠️ Security Check</h2>
+        <p>Please complete the verification to continue.</p>
+        <button id="verifyBtn" style="padding: 10px 20px; background: white; border: none; border-radius: 4px; cursor: pointer;">Verify I am not a robot</button>
+    </div>
+    <div id="mainContent">
+        <h1>Book your appointment</h1>
+        <div id="staleWarning" class="warning" style="display: none;">
+            ⚠️ Page data is stale. Please refresh (F5) to see latest slots.
+        </div>
+        <div id="noSlotsMsg">
+            <p>No appointment slots available for this period.</p>
+            <p>Slots are released periodically. Check back later.</p>
+        </div>
+        <div id="slotsArea" style="margin: 20px 0;"></div>
+        <button id="bookBtn" class="book-btn" disabled>Book your appointment</button>
+        <p style="margin-top: 20px; font-size: 12px; color: #666;">
+            🔄 Simulation refreshes every 60-120 seconds (automatically).<br>
+            💡 When a slot appears, it will stay visible for 3-8 seconds.<br>
+            📱 Use <strong>forceSlot()</strong> in console to trigger a slot manually.
+        </p>
+    </div>
+</div>
+<script>
+    let sessionValid = false;
+    let slotsVisible = false;
+    let slotsVisibleUntil = 0;
+    let slotTimeout = null;
+    let refreshTimer = null;
+    let currentSlots = [];
+
+    // Simulated Cloudflare challenge
+    document.getElementById('verifyBtn').addEventListener('click', function() {
+        document.getElementById('cloudflareChallenge').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        sessionValid = true;
+        startRefreshCycle();
+        console.log('[SIM] Cloudflare bypassed. Session active.');
+    });
+
+    function startRefreshCycle() {
+        const refreshInterval = Math.floor(Math.random() * 60000) + 60000; // 60-120 seconds
+        console.log(`[SIM] Next refresh in ${refreshInterval/1000} seconds`);
+        if (refreshTimer) clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(() => {
+            console.log('[SIM] Triggering refresh (simulating F5)');
+            location.reload();
+        }, refreshInterval);
+    }
+
+    function showStaleWarning() {
+        const staleDiv = document.getElementById('staleWarning');
+        staleDiv.style.display = 'block';
+        setTimeout(() => {
+            staleDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    // Simulate slot injection (call this from console or on refresh)
+    window.showSlots = function() {
+        if (!sessionValid) return;
+        if (slotsVisible) {
+            console.log('[SIM] Slots already visible');
+            return;
+        }
+        const slotTimes = ['08:00', '09:30', '11:00', '13:30', '15:00'];
+        const numSlots = Math.floor(Math.random() * 3) + 1; // 1-3 slots
+        const shuffled = [...slotTimes].sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, numSlots);
+        currentSlots = selected;
+
+        const slotsDiv = document.getElementById('slotsArea');
+        slotsDiv.innerHTML = '';
+        selected.forEach(time => {
+            const btn = document.createElement('button');
+            btn.textContent = time;
+            btn.className = 'slot';
+            btn.onclick = () => selectSlot(btn, time);
+            slotsDiv.appendChild(btn);
+        });
+        document.getElementById('noSlotsMsg').style.display = 'none';
+        slotsVisible = true;
+        slotsVisibleUntil = Date.now() + (Math.random() * 5000 + 3000); // 3-8 seconds
+        console.log(`[SIM] Slots injected: ${selected.join(', ')}. Will expire in ${Math.round((slotsVisibleUntil - Date.now())/1000)}s`);
+
+        // Auto-hide after duration
+        if (slotTimeout) clearTimeout(slotTimeout);
+        slotTimeout = setTimeout(() => {
+            if (slotsVisible && Date.now() >= slotsVisibleUntil) {
+                hideSlots();
+            }
+        }, slotsVisibleUntil - Date.now());
+    };
+
+    function hideSlots() {
+        document.getElementById('slotsArea').innerHTML = '';
+        document.getElementById('noSlotsMsg').style.display = 'block';
+        slotsVisible = false;
+        currentSlots = [];
+        if (slotTimeout) clearTimeout(slotTimeout);
+        console.log('[SIM] Slots expired.');
+    }
+
+    let selectedSlot = null;
+    function selectSlot(btn, time) {
+        if (!slotsVisible) return;
+        selectedSlot = time;
+        // Highlight selected
+        document.querySelectorAll('.slot').forEach(b => b.style.background = '#4CAF50');
+        btn.style.background = '#2196F3';
+        document.getElementById('bookBtn').disabled = false;
+        console.log(`[SIM] Slot selected: ${time}`);
+    }
+
+    document.getElementById('bookBtn').addEventListener('click', () => {
+        if (selectedSlot) {
+            alert(`✅ SIMULATION: Appointment booked for ${selectedSlot}! The bot would stop here.`);
+            console.log(`[SIM] Booked slot: ${selectedSlot}`);
+            hideSlots();
+            selectedSlot = null;
+            document.getElementById('bookBtn').disabled = true;
+        }
+    });
+
+    // Simulate refresh cycle – on page load, start the process
+    // Also show stale warning after some time
+    if (sessionStorage.getItem('firstLoad') === null) {
+        sessionStorage.setItem('firstLoad', 'false');
+    } else {
+        // If this is a refresh, show a message and maybe trigger slots
+        console.log('[SIM] Page refreshed (F5 detected)');
+        showStaleWarning();
+        // Random chance to inject slots after refresh (simulate new data)
+        const chance = Math.random();
+        if (chance > 0.7) {
+            setTimeout(() => window.showSlots(), 1000);
+        }
+    }
+
+    // Expose manual trigger for testing
+    window.forceSlot = window.showSlots;
+    console.log('[SIM] Enhanced simulation ready. Use forceSlot() to inject slots.');
+</script>
+</body>
+</html>
