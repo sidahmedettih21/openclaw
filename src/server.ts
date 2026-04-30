@@ -110,7 +110,7 @@ async function navigateToAppointmentBooking(page: Page): Promise<boolean> {
 
     // Step 6: Appointment booking page
     const targetUrl =
-      "https://visas-pt.tlscontact.com/en-us/388184/workflow/appointment-booking?location=dzALG2pt";
+      "https://visas-pt.tlscontact.com";
     await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
     await page.waitForLoadState("networkidle", { timeout: 20000 }).catch(() => {});
     await randomDelay(500, 1500);
@@ -246,4 +246,12 @@ setInterval(() => {
 }, 5000); // <-- 5 seconds
 
 // Run once on start
-monitorAndBook().catch((e) => logger.error("Startup error", e));
+monitorAndBook().catch((e) => logger.error("Startup error", e));let isRunning = false;
+const safeMonitorAndBook = async () => {
+  if (isRunning) return;
+  isRunning = true;
+  try { await monitorAndBook(); }
+  finally { isRunning = false; }
+};
+// Replace the existing setInterval call with:
+setInterval(() => safeMonitorAndBook().catch(e => logger.error(e)), 30000);
